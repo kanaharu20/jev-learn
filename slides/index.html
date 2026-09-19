@@ -33,7 +33,6 @@ body { background: var(--lavender); font-family: var(--text); font-weight: 400; 
   display: flex; flex-direction: column;
   break-after: page; page-break-after: always;
 }
-@media print { body { background: var(--paper); } .slide { margin: 0; } }
 
 /* top bar: stage stepper (ghost nav) */
 .top { height: 64px; flex: none; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 500; color: var(--fog); border-bottom: 1px solid var(--lavender); margin-bottom: 22px; }
@@ -86,6 +85,14 @@ pre.code .hl { background: var(--lavender); }
 .pbar b { display: block; height: 100%; border-radius: 4px; background: var(--ink); }
 .cmd { font-family: var(--mono); letter-spacing: -0.021em; font-weight: 600; color: var(--ink); }
 .cmd::before { content: "> "; font-weight: 400; color: var(--mist); }
+
+/* 印刷 / PDF 用。本体の規則より後ろに置く(同じ詳細度なので後勝ち) */
+@media print {
+  body { background: var(--paper); }
+  .slide { margin: 0; }
+  /* ぼかした影が PDF では平坦な灰色の帯になるため、影をやめて枠線にする */
+  pre.code { box-shadow: none; border: 1px solid var(--lavender); }
+}
 </style>
 </head>
 <body>

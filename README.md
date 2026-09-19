@@ -7,7 +7,8 @@ Jev は文章を生成しない。「状況(state)」と「型付きの質問(qu
 選択肢・点数・真偽の確率を直接返す。
 
 勉強用のコードです。コピーして自由に使ってください(MIT License)。
-発表スライドは [slides/index.html](slides/index.html)(ブラウザで開く。1 枚 1280×720)。
+発表スライドは [slides/index.html](slides/index.html)(ブラウザで開く)と
+[slides/jev-learn.pdf](slides/jev-learn.pdf)(19 枚、1 枚 1280×720)。
 
 ## 準備
 
