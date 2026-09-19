@@ -1,6 +1,7 @@
 """3 種類の質問 (boolean / choice / score) を 1 リクエストで並列に評価する。
+答えの確率だけでなく、Jev 自身の確信度 (confidence) も取り出す。
 実行: python3 02_three_types.py"""
-from jev import evaluate
+from jev import confidences, evaluate
 
 state = "3日前から Stripe 連携がずっと失敗しています。売上が止まっていて困っています。至急お願いします。"
 
@@ -25,5 +26,9 @@ result = evaluate(state, {
     },
 })
 
+# confidence は answers ではなく providerMetadata に入っている。
+conf = confidences(result)
+
 for name, answer in result["answers"].items():
     print(f"\n{name}: {answer}")
+    print("  confidence:", conf.get(name, "なし(boolean には付かない)"))

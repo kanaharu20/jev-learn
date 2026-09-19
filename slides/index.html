@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<title>話題の Jev、使ってみた</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+JP:wght@400;500;600&family=Rubik:wght@400;500;600&display=swap">
+<style>
+:root {
+  --ink: #303055;      /* headings, links, primary text */
+  --slate: #403f53;    /* prose */
+  --fog: #767682;      /* helper text */
+  --mist: #a8a8b0;     /* hairline text, prompts */
+  --lavender: #e8e8f2; /* the only surface tint */
+  --paper: #ffffff;
+  --plum: #8844ae; --cobalt: #3b61b0; --teal: #096e72; --rust: #984e4d; /* code only */
+  /* 旧変数名の互換(インライン style が参照している) */
+  --bg: var(--paper); --card: var(--paper); --muted: var(--fog); --green: var(--ink);
+  --mint: var(--lavender); --orange: var(--mist); --orange-ink: var(--ink);
+  --head: 'Rubik', 'IBM Plex Sans JP', sans-serif;
+  --text: 'Rubik', 'IBM Plex Sans JP', sans-serif;
+  --mono: 'IBM Plex Mono', 'IBM Plex Sans JP', monospace;
+}
+@page { size: 1280px 720px; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { background: var(--lavender); font-family: var(--text); font-weight: 400; color: var(--slate); }
+
+.slide {
+  width: 1280px; height: 720px; overflow: hidden; position: relative;
+  background: var(--paper); margin: 24px auto; padding: 0 64px 44px;
+  display: flex; flex-direction: column;
+  break-after: page; page-break-after: always;
+}
+@media print { body { background: var(--paper); } .slide { margin: 0; } }
+
+/* top bar: stage stepper (ghost nav) */
+.top { height: 64px; flex: none; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 500; color: var(--fog); border-bottom: 1px solid var(--lavender); margin-bottom: 22px; }
+.top > span { font-family: var(--mono); font-weight: 400; color: var(--mist); }
+.steps { display: flex; gap: 26px; }
+.steps .on { color: var(--ink); font-weight: 600; }
+
+.kicker { font-size: 12px; font-weight: 600; letter-spacing: 0.056em; color: var(--fog); margin-bottom: 6px; }
+h1 { font-family: var(--head); font-weight: 500; font-size: 72px; line-height: 1.2; letter-spacing: -0.021em; color: var(--ink); }
+h2 { font-family: var(--head); font-weight: 600; font-size: 36px; line-height: 1.3; letter-spacing: -0.021em; color: var(--ink); }
+h3 { color: var(--ink); letter-spacing: -0.01em; }
+.head { flex: none; margin-bottom: 20px; }
+.grow { flex: 1; min-height: 0; }
+p, li { font-size: 19px; line-height: 1.7; }
+.lead { font-size: 24px; line-height: 1.7; }
+.muted { color: var(--fog); }
+.mono { font-family: var(--mono); letter-spacing: -0.021em; color: var(--ink); }
+b { font-weight: 600; color: var(--ink); }
+svg { display: block; }
+
+/* code block: the artwork */
+pre.code {
+  background: var(--paper); color: var(--ink); border-radius: 8px; padding: 18px 24px 18px 12px;
+  box-shadow: 0 0 0 1px var(--lavender), 0 4px 12px rgba(0,0,0,0.04);
+  font-family: var(--mono); font-size: 16px; line-height: 1.5; letter-spacing: -0.021em; white-space: pre; overflow: hidden;
+  counter-reset: ln;
+}
+pre.code .file { display: block; font-size: 13px; font-weight: 600; color: var(--ink); padding: 0 0 8px 46px; }
+pre.code .file::before { content: "> "; color: var(--mist); font-weight: 400; }
+pre.code .ln { display: block; padding-right: 8px; border-radius: 4px; }
+pre.code .ln::before { counter-increment: ln; content: counter(ln); display: inline-block; width: 30px; margin-right: 16px; text-align: right; color: var(--mist); font-size: 13px; }
+pre.code.plain .ln::before { content: ""; width: 0; margin-right: 12px; }
+pre.code.plain .file { padding-left: 12px; }
+pre.code .hl { background: var(--lavender); }
+.t-s { color: var(--plum); } .t-k { color: var(--cobalt); } .t-c { color: var(--fog); } .t-n { color: var(--teal); }
+
+.codegrid { display: grid; grid-template-columns: 770px 1fr; gap: 36px; align-items: start; }
+.notes { display: flex; flex-direction: column; gap: 20px; list-style: none; }
+.notes li { display: grid; grid-template-columns: 32px 1fr; gap: 14px; font-size: 22px; line-height: 1.5; color: var(--ink); }
+.notes i { font-style: normal; font-family: var(--mono); font-weight: 600; font-size: 14px; width: 32px; height: 32px; border-radius: 4px; background: var(--lavender); color: var(--ink); display: grid; place-items: center; margin-top: 2px; }
+.notes code, p code { font-family: var(--mono); font-size: .88em; letter-spacing: -0.021em; color: var(--ink); background: var(--lavender); border-radius: 4px; padding: 1px 6px; }
+.doodle { width: 96px; height: 96px; margin-top: 8px; align-self: flex-end; }
+
+.card { background: var(--paper); border: 1px solid var(--lavender); border-radius: 8px; padding: 24px 26px; }
+.row { display: grid; gap: 24px; }
+.big { font-family: var(--head); font-weight: 500; font-size: 84px; line-height: 1.1; letter-spacing: -0.021em; color: var(--ink); }
+.big small { font-size: 30px; margin-left: 4px; }
+.chip { display: inline-block; font-size: 12px; font-weight: 600; letter-spacing: 0.056em; text-transform: uppercase; border: 1px solid var(--lavender); color: var(--ink); border-radius: 4px; padding: 3px 8px; }
+.pbar { height: 18px; border-radius: 4px; background: var(--lavender); overflow: hidden; }
+.pbar b { display: block; height: 100%; border-radius: 4px; background: var(--ink); }
+.cmd { font-family: var(--mono); letter-spacing: -0.021em; font-weight: 600; color: var(--ink); }
+.cmd::before { content: "> "; font-weight: 400; color: var(--mist); }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+  </defs>
+</svg>
+
+<!-- ============ 表紙 ============ -->
+<section class="slide" style="padding-top:0">
+  <div class="top" style="position:relative"><span>jev-learn</span><span>LT</span></div>
+  <div class="grow" style="display:grid; grid-template-columns:1fr 580px; align-items:center; gap:48px">
+    <div>
+      <p class="kicker">typesafe-ai/jev × Python 標準ライブラリ</p>
+      <h1>話題の Jev、<br>使ってみた</h1>
+      <p class="lead" style="margin-top:20px">文章を書かない AI を、Python だけで叩く。</p>
+      <p class="muted" style="margin-top:20px">kanaharu20</p>
+      <p class="muted" style="font-size:15px; margin-top:2px">Kanamitsu Haruya — 42 intra: hkanamit</p>
+      <p class="mono" style="font-size:17px; margin-top:6px">github.com/kanaharu20/jev-learn</p>
+    </div>
+<pre class="code plain" data-hl="8" style="font-size:15px"><span class="file">python3 01_hello.py</span><code>evaluate(
+  state="サポート担当者は顧客に全額返金を実施した。",
+  questions={
+    "refunded": {"type": "boolean",
+                 "instructions": "返金は行われたか?"},
+  },
+)
+# → {"refunded": {"type": "boolean", "probability": 0.96}}</code></pre>
+  </div>
+</section>
+
+<!-- ============ Jev とは ============ -->
+<section class="slide">
+  <div class="top"><div class="steps"><span class="on">Jev とは</span><span>00 準備</span><span>01 hello</span><span>02 types</span><span>03 agent</span><span>04 vs LLM</span><span>jev.py</span><span>これから</span></div><span>02 / 19</span></div>
+  <div class="head"><p class="kicker">WHAT</p><h2>Jev は生成しない。判断して、確率を返す</h2></div>
+  <div class="grow" style="display:grid; grid-template-columns:1fr 60px 1fr; align-items:start; gap:12px">
+    <div>
+<pre class="code plain"><span class="file">request — POST /v4/ai/evaluation-model</span><code>{
+  "state": "サポート担当者は顧客に全額返金を実施した。",
+  "questions": {
+    "refunded": {
+      "type": "boolean",
+      "instructions": "返金は行われたか?"
+    }
+  }
+}</code></pre>
+      <p class="lead" style="margin-top:14px"><b>状況</b>と<b>型付きの質問</b>を渡す</p>
+    </div>
+    <svg viewBox="0 0 60 120" width="60" style="margin-top:90px"><path d="M6 60 H46" stroke="#303055" stroke-width="4" stroke-linecap="round"/><path d="M36 46 L52 60 L36 74" fill="none" stroke="#303055" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <div>
+<pre class="code plain" data-hl="5"><span class="file">response</span><code>{
+  "answers": {
+    "refunded": {
+      "type": "boolean",
+      "probability": 0.96
+    }
+  },
+  "usage": {"inputTokens": 297, "outputTokens": 21}
+}</code></pre>
+      <p class="lead" style="margin-top:14px"><b>判断結果のみ</b>が返る</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ロードマップ ============ -->
+<section class="slide">
+  <div class="top"><div class="steps"><span class="on">Jev とは</span><span>00 準備</span><span>01 hello</span><span>02 types</span><span>03 agent</span><span>04 vs LLM</span><span>jev.py</span><span>これから</span></div><span>03 / 19</span></div>
+  <div class="head"><p class="kicker">ROADMAP</p><h2>4 本のスクリプトで、01 から順に</h2></div>
+  <div class="grow" style="position:relative">
+    <div class="row" style="grid-template-columns:repeat(4,1fr); position:relative">
+      <div class="card"><div class="big" style="font-size:56px;color:var(--orange-ink)">01</div><p class="mono" style="font-size:16px"><b>01_hello.py</b></p><p>boolean を 1 問</p><span class="chip">70 行</span></div>
+      <div class="card"><div class="big" style="font-size:56px;color:var(--orange-ink)">02</div><p class="mono" style="font-size:16px"><b>02_three_types.py</b></p><p>3 つの型を一度に</p><span class="chip">34 行</span></div>
+      <div class="card"><div class="big" style="font-size:56px;color:var(--orange-ink)">03</div><p class="mono" style="font-size:16px"><b>03_agent_decision.py</b></p><p>判断させて分岐する</p><span class="chip">61 行</span></div>
+      <div class="card"><div class="big" style="font-size:56px;color:var(--orange-ink)">04</div><p class="mono" style="font-size:16px"><b>04_vs_llm.py</b></p><p>Claude Haiku と比べる</p><span class="chip">20 行</span></div>
+    </div>
+    <div style="display:flex; align-items:center; gap:20px; position:absolute; left:0; right:0; bottom:0">
+      <p class="lead">4 本 + <code>jev.py</code> で <b>272 行</b>。<b>標準ライブラリのみ</b>。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 00 準備 ============ -->
+<section class="slide">
+  <div class="top"><div class="steps"><span>Jev とは</span><span class="on">00 準備</span><span>01 hello</span><span>02 types</span><span>03 agent</span><span>04 vs LLM</span><span>jev.py</span><span>これから</span></div><span>04 / 19</span></div>
+  <div class="head"><p class="kicker">STEP 00 · jev.py</p><h2>API キーは Keychain から読む</h2></div>
+  <div class="grow codegrid">
+<pre class="code" data-hl="3,11,12" style="font-size:15px; line-height:1.4"><span class="file">jev.py — load_api_key()</span><code>def load_api_key():
+    """環境変数にあればそれを、なければ macOS の Keychain から読む。"""
+    key = os.environ.get("AI_GATEWAY_API_KEY")
+    if not key:
+        try:
+            key = subprocess.run(
+                ["/usr/bin/security", "find-generic-password",
+                 "-s", "Vercel AI Gateway", "-a", "vercel-ai-gateway", "-w"],
+                capture_output=True, text=True,
+            ).stdout.strip()
+        except FileNotFoundError:
+            key = ""  # macOS 以外。Keychain が無い
+    if not key:
+        raise SystemExit("API キーが見つかりません。…")
+    return key
+
+
+API_KEY = load_api_key()</code></pre>
+    <ul class="notes">
+      <li><i>1</i><span>setup コマンドが保存してくれる</span></li>
+      <li><i>2</i><span>環境変数があれば優先</span></li>
+      <li><i>3</i><span>macOS 以外でも<b>落ちない</b></span></li>
+      <li><i>4</i><span><code>.env</code> を作らない</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 01-a ============ -->
+<section class="slide">
+  <div class="top"><div class="steps"><span>Jev とは</span><span>00 準備</span><span class="on">01 hello</span><span>02 types</span><span>03 agent</span><span>04 vs LLM</span><span>jev.py</span><span>これから</span></div><span>05 / 19</span></div>
+  <div class="head"><p class="kicker">STEP 01 · 01_hello.py</p><h2>HTTP を 1 本、自分で送る</h2></div>
+  <div class="grow codegrid">
+<pre class="code" data-hl="3,8-11"><span class="file">01_hello.py — evaluate()</span><code>def evaluate(model, state, questions):
+    req = urllib.request.Request(
+        "https://ai-gateway.vercel.sh/v4/ai/evaluation-model",
+        data=json.dumps({"state": state, "questions": questions}).encode(),
+        headers={
+            "Authorization": f"Bearer {API_KEY}",
+            "Content-Type": "application/json",
+            "ai-model-id": model,
+            "ai-evaluation-model-specification-version": "4",
+            "ai-gateway-protocol-version": "0.0.1",
+            "ai-gateway-auth-method": "api-key",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(req) as res:
+        return json.load(res)</code></pre>
+    <ul class="notes">
+      <li><i>1</i><span>専用のエンドポイント</span></li>
+      <li><i>2</i><span>モデルは<b>ヘッダー</b>で指定</span></li>
+      <li><i>3</i><span>叩き先は <b>Vercel AI Gateway</b>。<br>04 の Claude Haiku も同じ経路</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 01-b ============ -->
+<section class="slide">
+  <div class="top"><div class="steps"><span>Jev とは</span><span>00 準備</span><span class="on">01 hello</span><span>02 types</span><span>03 agent</span><span>04 vs LLM</span><span>jev.py</span><span>これから</span></div><span>06 / 19</span></div>
+  <div class="head"><p class="kicker">STEP 01 · 01_hello.py</p><h2>返ってくるのは確率だけ</h2></div>
+  <div class="grow codegrid">
+    <div style="display:flex; flex-direction:column; gap:18px">
+<pre class="code" data-hl="10,11" style="font-size:15px; line-height:1.45"><span class="file">01_hello.py(長い行は折り返しあり)</span><code>result = evaluate(
+    model="typesafe-ai/jev",
+    state="サポート担当者は顧客に全額返金を実施した。",
+    questions={
+        "refunded": {"type": "boolean", "instructions": "返金は行われたか?"},
+    },
+)
+
+print(json.dumps(result["answers"], indent=2, ensure_ascii=False))
+print("usage:", result.get("usage"))
+print("レスポンスのキー:", list(result))</code></pre>
+    </div>
+    <div style="display:flex; flex-direction:column; gap:12px">
+<pre class="code plain" data-hl="4,7-9" style="font-size:15px"><span class="file">$ python3 01_hello.py</span><code>{
+  "refunded": {
+    "type": "boolean",
+    "probability": 0.96
+  }
+}
+usage: {'inputTokens': 297, 'outputTokens': 21}
+レスポンスのキー: ['answers', 'rounding', 'usage',
+                  'warnings', 'providerMetadata']</code></pre>
+      <ul class="notes">
+      <li><i>1</i><span>キー名は自分で決める</span></li>
+      <li><i>2</i><span>True / False に丸めるのは呼ぶ側</span></li>
+      <li><i>3</i><span><b>answers が全部ではない</b></span></li>
+    </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 02-a ============ -->
+<section class="slide">
+  <div class="top"><div class="steps"><span>Jev とは</span><span>00 準備</span><span>01 hello</span><span class="on">02 types</span><span>03 agent</span><span>04 vs LLM</span><span>jev.py</span><span>これから</span></div><span>07 / 19</span></div>
+  <div class="head"><p class="kicker">STEP 02 · 02_three_types.py</p><h2>3 つの型を、1 リクエストで</h2></div>
+  <div class="grow codegrid">
+<pre class="code" data-hl="3,7,9-13,16,18" style="font-size:15px; line-height:1.45"><span class="file">02_three_types.py</span><code>result = evaluate(state, {
+    "isUrgent": {
+        "type": "boolean",
+        "instructions": "この問い合わせは緊急か?",
+    },
+    "department": {
+        "type": "choice",
+        "instructions": "どのチームが対応すべきか?",
+        "criteria": {
+            "billing": "料金・請求・返金の話",
+            "technical": "不具合や連携の問題",
+            "sales": "価格や契約の相談",
+        },
+    },
+    "frustration": {
+        "type": "score",
+        "instructions": "顧客の苛立ちの度合い",
+        "criteria": ["落ち着いている", "困っているが丁寧", "かなり怒っている"],
+    },
+})</code></pre>
+    <ul class="notes">
+      <li><i>1</i><span>choice は <b>dict</b></span></li>
+      <li><i>2</i><span>score は <b>list</b>(順番 = 段階)</span></li>
+      <li><i>3</i><span>呼び出しは 1 回のまま</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 02-b ============ -->
+<section class="slide">
+  <div class="top"><div class="steps"><span>Jev とは</span><span>00 準備</span><span>01 hello</span><span class="on">02 types</span><span>03 agent</span><span>04 vs LLM</span><span>jev.py</span><span>これから</span></div><span>08 / 19</span></div>
+  <div class="head"><p class="kicker">STEP 02 · 出力を読む</p><h2>score 1.05 = 段階番号の期待値</h2></div>
+  <div class="grow codegrid">
+    <div style="display:flex; flex-direction:column; gap:14px">
+<pre class="code" data-hl="5,9" style="font-size:13px; line-height:1.4; padding:12px 24px 12px 12px"><span class="file">02_three_types.py(state は折り返しあり)</span><code>state = ("3日前から Stripe 連携がずっと失敗しています。"
+         "売上が止まっていて困っています。至急お願いします。")
+# result = evaluate(state, {...})   ← 前のスライド
+
+conf = confidences(result)   # providerMetadata から取り出す
+
+for name, answer in result["answers"].items():
+    print(f"\n{name}: {answer}")
+    print("  confidence:", conf.get(name, "なし(boolean には付かない)"))</code></pre>
+<pre class="code plain" data-hl="2,7,11" style="font-size:13px; line-height:1.45; padding:12px 24px 12px 12px"><span class="file">$ python3 02_three_types.py(整形)</span><code>isUrgent:    {'type': 'boolean', 'probability': 0.94}
+  confidence: なし(boolean には付かない)
+
+department:  {'type': 'choice', 'choice': 'technical',
+              'probabilities': {'billing': 0, 'sales': 0,
+                                'technical': 1}}
+  confidence: 0.99
+
+frustration: {'type': 'score', 'score': 1.05,
+              'probabilities': {'0': 0, '1': 0.95, '2': 0.05}}
+  confidence: 0.93</code></pre>
+    </div>
+    <div class="card" style="display:flex; flex-direction:column; gap:12px">
+      <p class="mono" style="font-size:15px"><b>frustration.probabilities</b></p>
+      <div><p style="font-size:16px">0 · 落ち着いている <span class="mono muted">0.00</span></p><div class="pbar"><b style="width:1%"></b></div></div>
+      <div><p style="font-size:16px">1 · 困っているが丁寧 <span class="mono muted">0.95</span></p><div class="pbar"><b style="width:95%"></b></div></div>
+      <div><p style="font-size:16px">2 · かなり怒っている <span class="mono muted">0.05</span></p><div class="pbar"><b style="width:5%; background:var(--orange)"></b></div></div>
+      <p class="mono" style="font-size:17px; margin-top:6px">0×0 + 1×0.95 + 2×0.05 = <b>1.05</b></p>
+      <p style="font-size:17px; line-height:1.6">確率の合計は 1。1.05 は確率ではなく<b>段階番号の平均</b>なので 0〜2 の値を取る。</p>
+      <p style="font-size:20px"><b>分布ごと返る</b></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ confidence ============ -->
+<section class="slide">
+  <div class="top"><div class="steps"><span>Jev とは</span><span>00 準備</span><span>01 hello</span><span class="on">02 types</span><span>03 agent</span><span>04 vs LLM</span><span>jev.py</span><span>これから</span></div><span>09 / 19</span></div>
+  <div class="head"><p class="kicker">STEP 02 · ドキュメント未掲載</p><h2>confidence は answers の外にいる</h2></div>
+  <div class="grow codegrid">
+    <div style="display:flex; flex-direction:column; gap:14px">
+<pre class="code plain" data-hl="3,4" style="font-size:15px"><span class="file">response — answers 以外の部分</span><code>"providerMetadata": {
+  "typesafe": {
+    "confidence": {"department": 0.99,
+                   "frustration": 0.93}
+  }
+}</code></pre>
+<pre class="code" data-hl="2-4" style="font-size:15px; line-height:1.45"><span class="file">jev.py</span><code>def confidences(result):
+    return (result.get("providerMetadata", {})
+            .get("typesafe", {})
+            .get("confidence", {}))</code></pre>
+      <ul class="notes" style="gap:10px">
+        <li><i>1</i><span>付くのは <b>choice</b> と <b>score</b> だけ</span></li>
+        <li><i>2</i><span>公式ドキュメントに記載なし</span></li>
+        <li><i>3</i><span>消えても落ちないよう <code>.get()</code> で受ける</span></li>
+      </ul>
+    </div>
+    <div class="card" style="display:flex; flex-direction:column; gap:14px">
+      <p class="mono" style="font-size:15px"><b>同じ分類・曖昧さだけ変えた実測</b></p>
+      <div style="display:grid; grid-template-columns:1fr 78px 92px; gap:12px 8px; align-items:center; font-size:17px">
+        <span class="muted" style="font-size:13px">state</span>
+        <span class="mono muted" style="font-size:13px; text-align:right">最上位</span>
+        <span class="mono muted" style="font-size:13px; text-align:right">confidence</span>
+        <span>明確</span>
+        <span class="mono" style="text-align:right">1.00</span>
+        <span class="mono" style="text-align:right"><b>1.00</b></span>
+        <span>やや曖昧</span>
+        <span class="mono" style="text-align:right">0.58</span>
+        <span class="mono" style="text-align:right"><b>0.37</b></span>
+        <span>かなり曖昧</span>
+        <span class="mono" style="text-align:right">0.51</span>
+        <span class="mono" style="text-align:right"><b>0.26</b></span>
+      </div>
+      <p style="font-size:18px; line-height:1.6">最上位が <b>0.51</b> = 五分五分に見えても、confidence は <b>0.26</b> まで落ちている。</p>
+      <p style="font-size:18px; line-height:1.6"><b>確率とは別物。</b>choice のしきい値はこちらで切る。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 03-a ============ -->
+<section class="slide">
+  <div class="top"><div class="steps"><span>Jev とは</span><span>00 準備</span><span>01 hello</span><span>02 types</span><span class="on">03 agent</span><span>04 vs LLM</span><span>jev.py</span><span>これから</span></div><span>10 / 19</span></div>
+  <div class="head"><p class="kicker">STEP 03 · 03_agent_decision.py</p><h2>state は辞書のまま渡せる</h2></div>
+  <div class="grow codegrid">
+    <div style="display:flex; flex-direction:column; gap:16px">
+<pre class="code" data-hl="4"><span class="file">03_agent_decision.py</span><code>agent_state = {
+    "goal": "ユーザーの注文 #1234 をキャンセルする",
+    "toolsTried": ["lookup_order"],
+    "lastToolResult": {"status": "shipped", "shippedAt": "2026-09-16"},
+    "attempts": 1,
+}</code></pre>
+<pre class="code plain"><span class="file">jev.py — 送るときは json.dumps するだけ</span><code>{"state": state, "questions": questions}</code></pre>
+    </div>
+    <ul class="notes">
+      <li><i>1</i><span>キャンセルしたいのに<b>発送済み</b></span></li>
+      <li><i>2</i><span>ツールの戻り値をそのまま入れる</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 03-b ============ -->
+<section class="slide">
+  <div class="top"><div class="steps"><span>Jev とは</span><span>00 準備</span><span>01 hello</span><span>02 types</span><span class="on">03 agent</span><span>04 vs LLM</span><span>jev.py</span><span>これから</span></div><span>11 / 19</span></div>
+  <div class="head"><p class="kicker">STEP 03 · 03_agent_decision.py</p><h2>「次の一手」を choice で聞く</h2></div>
+  <div class="grow codegrid">
+<pre class="code" data-hl="5-10,18,19" style="font-size:15px; line-height:1.4"><span class="file">03_agent_decision.py</span><code>result = evaluate(agent_state, {
+    "nextAction": {
+        "type": "choice",
+        "instructions": "次に取るべき行動は?",
+        "criteria": {
+            "cancel_order": "キャンセル API を呼ぶ(未発送のときだけ可能)",
+            "start_return": "発送済みなので返品手続きを始める",
+            "ask_user": "ユーザーに確認が必要",
+            "give_up": "これ以上は無理。停止する",
+        },
+    },
+    "needsHuman": {
+        "type": "boolean",
+        "instructions": "人間の担当者にエスカレーションすべきか?",
+    },
+})
+
+answers = result["answers"]
+conf = confidences(result)   # nextAction にだけ付く</code></pre>
+    <ul class="notes">
+      <li><i>1</i><span>キー = <b>関数名</b></span></li>
+      <li><i>2</i><span>説明文が実質のプロンプト</span></li>
+      <li><i>3</i><span>判断ごとに質問を分ける</span></li>
+      <li><i>4</i><span>返り値を<b>丸ごと</b>受ける</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 03-c ============ -->
+<section class="slide">
+  <div class="top"><div class="steps"><span>Jev とは</span><span>00 準備</span><span>01 hello</span><span>02 types</span><span class="on">03 agent</span><span>04 vs LLM</span><span>jev.py</span><span>これから</span></div><span>12 / 19</span></div>
+  <div class="head"><p class="kicker">STEP 03 · 03_agent_decision.py</p><h2>判断は Jev、実行は match 文</h2></div>
+  <div class="grow codegrid">
+<pre class="code" data-hl="2,3" style="font-size:15px; line-height:1.45"><span class="file">03_agent_decision.py</span><code># 迷ったまま副作用のある API を呼ばない。取れなければ 0.0 扱い。
+if conf.get("nextAction", 0.0) &lt; 0.5:
+    print(f"→ confidence が {conf.get('nextAction')} と低い。実行せず確認に回す")
+else:
+    match answers["nextAction"]["choice"]:
+        case "cancel_order": print("→ cancel_order() を呼ぶ")
+        case "start_return": print("→ start_return() を呼ぶ")
+        case "ask_user":     print("→ ユーザーに質問する")
+        case "give_up":      print("→ 停止")
+
+# boolean には confidence が付かないので probability で切る
+if answers["needsHuman"]["probability"] &gt; 0.7:
+    print("→ 人間に引き継ぐ")</code></pre>
+    <div style="display:flex; flex-direction:column; gap:14px">
+      <div class="card" style="display:flex; flex-direction:column; gap:6px; padding:16px 20px">
+        <p class="mono" style="font-size:14px"><b>nextAction.probabilities</b></p>
+        <div style="display:grid; grid-template-columns:118px 1fr 40px; gap:8px; align-items:center; font-family:var(--mono); font-size:13px">
+          <span><b>start_return</b></span><div class="pbar"><b style="width:94%"></b></div><span><b>0.94</b></span>
+          <span>ask_user</span><div class="pbar"><b style="width:6%; background:var(--orange)"></b></div><span>0.06</span>
+          <span>cancel_order</span><div class="pbar"></div><span>0</span>
+          <span>give_up</span><div class="pbar"></div><span>0</span>
+        </div>
+        <p class="mono" style="font-size:13px; margin-top:2px">nextAction.confidence = <b>0.92</b></p>
+        <p class="mono" style="font-size:13px">needsHuman.probability = <b>0.82</b></p>
+      </div>
+<pre class="code plain" style="font-size:13px; line-height:1.45"><span class="file">$ python3 03_agent_decision.py</span><code>→ start_return() を呼ぶ
+→ 人間に引き継ぐ</code></pre>
+<pre class="code plain" data-hl="1,2" style="font-size:13px; line-height:1.45"><span class="file">曖昧な state に差し替えると(抜粋)</span><code>confidence: {'nextAction': 0.36}
+→ 実行せず確認に回す</code></pre>
+      <p class="lead" style="font-size:20px; line-height:1.4"><b>迷ったら動かない。</b></p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 04-a ============ -->
+<section class="slide">
+  <div class="top"><div class="steps"><span>Jev とは</span><span>00 準備</span><span>01 hello</span><span>02 types</span><span>03 agent</span><span class="on">04 vs LLM</span><span>jev.py</span><span>これから</span></div><span>13 / 19</span></div>
+  <div class="head"><p class="kicker">STEP 04 · 04_vs_llm.py</p><h2>同じ分類を Claude Haiku にも</h2></div>
+  <div class="grow codegrid">
+<pre class="code" data-hl="6-10,15-18" style="font-size:15px; line-height:1.4"><span class="file">04_vs_llm.py(長い行だけ折り返し)</span><code>state = "請求書の金額が先月の2倍になっています。理由を教えてください。"
+categories = {"billing": "料金・請求", "technical": "不具合", "sales": "契約相談"}
+
+# --- Jev: 型付きの答えが直接返る ---
+t = time.time()
+jev = evaluate(state, {
+    "category": {"type": "choice",
+                 "instructions": "問い合わせの種別は?",
+                 "criteria": categories},
+})
+print(f"Jev  {int((time.time() - t) * 1000)}ms →", jev["answers"]["category"])
+print("      confidence →", confidences(jev).get("category"))  # 迷っていれば下がる
+
+# --- LLM: 文章で返るので、パースが必要 ---
+t = time.time()
+text = chat(
+    f"次の問い合わせを {' / '.join(categories)} のどれかに分類し、"
+    f"キー名だけを答えてください。\n\n{state}")
+print(f"LLM  {int((time.time() - t) * 1000)}ms →", repr(text.strip()))</code></pre>
+    <ul class="notes">
+      <li><i>1</i><span>同じ Gateway の chat API</span></li>
+      <li><i>2</i><span>LLM には「お願い」するしかない</span></li>
+      <li><i>3</i><span>Jev には dict を渡すだけ</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 04-b ============ -->
+<section class="slide">
+  <div class="top"><div class="steps"><span>Jev とは</span><span>00 準備</span><span>01 hello</span><span>02 types</span><span>03 agent</span><span class="on">04 vs LLM</span><span>jev.py</span><span>これから</span></div><span>14 / 19</span></div>
+  <div class="head"><p class="kicker">STEP 04 · 結果</p><h2>どちらも正解。違いは速さと形</h2></div>
+  <div class="grow" style="display:flex; flex-direction:column; gap:18px">
+<pre class="code plain" data-hl="2" style="font-size:15px"><span class="file">$ python3 04_vs_llm.py</span><code>Jev  414ms → {'type': 'choice', 'choice': 'billing', 'probabilities': {'sales': 0, 'billing': 1, 'technical': 0}}
+      confidence → 1
+LLM  1031ms → 'billing'</code></pre>
+    <div class="row" style="grid-template-columns:1fr 1fr 300px; align-items:stretch">
+      <div class="card"><span class="chip">Jev</span><div class="big" style="color:var(--green)">414<small>ms</small></div><div class="pbar"><b style="width:40%"></b></div><p style="margin-top:10px; font-size:20px"><b>dict + 確率</b>。そのまま match へ<br>出力 <b>$0</b>(入力 $0.042 / 100 万)</p></div>
+      <div class="card"><span class="chip">Claude Haiku 4.5</span><div class="big">1031<small>ms</small></div><div class="pbar"><b style="width:100%; background:var(--ink)"></b></div><p style="margin-top:10px; font-size:20px"><b>文字列</b>。検証は自前</p></div>
+      <div style="display:flex; flex-direction:column; justify-content:flex-end">
+        <p class="muted" style="font-size:17px">計測は 1 回。参考値</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ jev.py retry ============ -->
+<section class="slide">
+  <div class="top"><div class="steps"><span>Jev とは</span><span>00 準備</span><span>01 hello</span><span>02 types</span><span>03 agent</span><span>04 vs LLM</span><span class="on">jev.py</span><span>これから</span></div><span>15 / 19</span></div>
+  <div class="head"><p class="kicker">共通部品 · jev.py(1/2)</p><h2>5xx だけ再試行する</h2></div>
+  <div class="grow codegrid">
+<pre class="code" data-hl="9,13-16"><span class="file">jev.py — _post()</span><code>def _post(path, body, extra_headers):
+    req = urllib.request.Request(
+        GATEWAY + path,
+        data=json.dumps(body).encode(),
+        headers={"Authorization": f"Bearer {API_KEY}",
+                 "Content-Type": "application/json", **extra_headers},
+        method="POST",
+    )
+    for attempt in range(4):
+        try:
+            with urllib.request.urlopen(req) as res:
+                return json.load(res)
+        except urllib.error.HTTPError as e:
+            if e.code &lt; 500 or attempt == 3:
+                raise
+            time.sleep(2 ** attempt)  # 5xx は 1, 2, 4 秒待って再試行</code></pre>
+    <ul class="notes">
+      <li><i>1</i><span>送信は <code>_post()</code> に 1 本化</span></li>
+      <li><i>2</i><span>4xx は即 <code>raise</code></span></li>
+      <li><i>3</i><span>1, 2, 4 秒待つ</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ jev.py api ============ -->
+<section class="slide">
+  <div class="top"><div class="steps"><span>Jev とは</span><span>00 準備</span><span>01 hello</span><span>02 types</span><span>03 agent</span><span>04 vs LLM</span><span class="on">jev.py</span><span>これから</span></div><span>16 / 19</span></div>
+  <div class="head"><p class="kicker">共通部品 · jev.py(2/2)</p><h2>違いはパスとヘッダーだけ</h2></div>
+  <div class="grow codegrid">
+<pre class="code" data-hl="3,5,14" style="font-size:15px; line-height:1.45"><span class="file">jev.py(長い行は折り返しあり)</span><code>def evaluate(state, questions, model="typesafe-ai/jev"):
+    return _post(
+        "/v4/ai/evaluation-model",
+        {"state": state, "questions": questions},
+        {"ai-model-id": model,
+         "ai-evaluation-model-specification-version": "4",
+         "ai-gateway-protocol-version": "0.0.1",
+         "ai-gateway-auth-method": "api-key"},
+    )
+
+
+def chat(prompt, model="anthropic/claude-haiku-4-5"):
+    res = _post(
+        "/v1/chat/completions",
+        {"model": model,
+         "messages": [{"role": "user", "content": prompt}]},
+        {},
+    )
+    return res["choices"][0]["message"]["content"]</code></pre>
+    <ul class="notes">
+      <li><i>1</i><span>Jev はヘッダーでモデル指定</span></li>
+      <li><i>2</i><span>chat は OpenAI 互換</span></li>
+      <li><i>3</i><span>コピーすればそのまま動く</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ============ 橋渡し ============ -->
+<section class="slide">
+  <div class="top"><div class="steps"><span>Jev とは</span><span>00 準備</span><span>01 hello</span><span>02 types</span><span>03 agent</span><span>04 vs LLM</span><span>jev.py</span><span class="on">これから</span></div><span>17 / 19</span></div>
+  <div class="head"><p class="kicker">NEXT</p><h2>「判断だけ切り出せる」なら、Jev</h2></div>
+  <div class="grow" style="display:flex; flex-direction:column; gap:22px">
+    <div class="row" style="grid-template-columns:repeat(3,1fr)">
+      <div class="card"><span class="chip">boolean</span><h3 style="font-family:var(--head); font-weight:600; font-size:28px; margin:8px 0 4px">はい / いいえ</h3><p class="lead">緊急か?</p></div>
+      <div class="card"><span class="chip">choice</span><h3 style="font-family:var(--head); font-weight:600; font-size:28px; margin:8px 0 4px">有限の選択肢</h3><p class="lead">どの部署か?</p></div>
+      <div class="card"><span class="chip">score</span><h3 style="font-family:var(--head); font-weight:600; font-size:28px; margin:8px 0 4px">段階</h3><p class="lead">どのくらい深刻か?</p></div>
+    </div>
+    <div>
+      <div>
+        <p class="big" style="font-size:56px; margin-top:12px">速い・安い・パース不要</p>
+        <p class="mono muted" style="font-size:18px; margin-top:8px; color:var(--fog)">414ms / 出力 $0 / そのまま match / 迷いは confidence</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 作れそうなもの ============ -->
+<section class="slide">
+  <div class="top"><div class="steps"><span>Jev とは</span><span>00 準備</span><span>01 hello</span><span>02 types</span><span>03 agent</span><span>04 vs LLM</span><span>jev.py</span><span class="on">これから</span></div><span>18 / 19</span></div>
+  <div class="head"><p class="kicker">NEXT</p><h2>こんなことに使えそう</h2></div>
+  <div class="grow" style="display:flex; flex-direction:column; gap:18px">
+    <div class="row" style="grid-template-columns:1fr 1fr; align-content:start; gap:14px 24px">
+      <div class="card" style="padding:15px 24px"><span class="chip">choice</span><h3 style="font-family:var(--head); font-weight:600; font-size:24px; margin:6px 0 2px">重い LLM の前の門番</h3><p>定型回答 / 安いモデル / 高いモデル / 人</p></div>
+      <div class="card" style="padding:15px 24px"><span class="chip">boolean ×3</span><h3 style="font-family:var(--head); font-weight:600; font-size:24px; margin:6px 0 2px">PR の一次チェック</h3><p>テスト・説明・破壊的変更を 1 リクエストで</p></div>
+      <div class="card" style="padding:15px 24px"><span class="chip">score</span><h3 style="font-family:var(--head); font-weight:600; font-size:24px; margin:6px 0 2px">大量ログの優先度付け</h3><p>数千件を深刻度順に。上位だけ人が見る</p></div>
+      <div class="card" style="padding:15px 24px"><span class="chip">choice + confidence</span><h3 style="font-family:var(--head); font-weight:600; font-size:24px; margin:6px 0 2px">エージェントの行動決定</h3><p>迷ったら実行せず人に回す</p></div>
+    </div>
+    <div>
+      <p class="lead"><b>選択肢が限られていて</b>、<b>信頼度の変数</b>が生きてくる。</p>
+      <p class="muted" style="font-size:19px">だから速さ・出力 $0 が効く。実行するのは自分のコード。</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ 締め ============ -->
+<section class="slide">
+  <div class="top" style="position:relative"><div class="steps"><span>Jev とは</span><span>00 準備</span><span>01 hello</span><span>02 types</span><span>03 agent</span><span>04 vs LLM</span><span>jev.py</span><span class="on">これから</span></div><span>19 / 19</span></div>
+  <div class="grow" style="display:grid; grid-template-columns:1fr 500px; align-items:center; gap:48px">
+    <div>
+      <p class="kicker">WRAP UP</p>
+      <h1 style="font-size:44px; line-height:1.4">一緒に OSS 開発でも<br>いかがでしょうか?</h1>
+      <p class="lead" style="margin-top:22px">勉強用に、そのままどうぞ。</p>
+      <p class="mono" style="font-size:22px; font-weight:600; margin-top:26px">github.com/kanaharu20/jev-learn</p>
+      <p class="muted" style="margin-top:6px">MIT License</p>
+    </div>
+<pre class="code plain" style="font-size:15px"><span class="file">terminal</span><code>git clone https://github.com/kanaharu20/jev-learn
+cd jev-learn
+npx vercel ai-gateway setup   # 初回だけ
+python3 01_hello.py</code></pre>
+  </div>
+</section>
+
+<script>
+// 行番号・行ハイライト・簡易シンタックスハイライト(行をまたぐトークンは扱わない)
+const RE = /("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')|(#.*$)|\b(def|return|import|from|if|not|or|and|for|in|try|except|raise|with|as|match|case|print)\b|\b(\d+(?:\.\d+)?)\b/g;
+const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+for (const pre of document.querySelectorAll('pre.code')) {
+  const code = pre.querySelector('code');
+  const hl = new Set();
+  for (const part of (pre.dataset.hl || '').split(',').filter(Boolean)) {
+    const [a, b] = part.split('-').map(Number);
+    for (let i = a; i <= (b || a); i++) hl.add(i);
+  }
+  code.innerHTML = code.textContent.split('\n').map((line, i) => {
+    let out = '', last = 0;
+    for (const m of line.matchAll(RE)) {
+      out += esc(line.slice(last, m.index));
+      const cls = m[1] ? 't-s' : m[2] ? 't-c' : m[3] ? 't-k' : 't-n';
+      out += `<span class="${cls}">${esc(m[0])}</span>`;
+      last = m.index + m[0].length;
+    }
+    out += esc(line.slice(last));
+    return `<span class="ln${hl.has(i + 1) ? ' hl' : ''}">${out || ' '}</span>`;
+  }).join('');
+}
+</script>
+</body>
+</html>

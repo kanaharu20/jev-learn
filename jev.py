@@ -3,6 +3,8 @@
 import json
 import os
 import subprocess
+import time
+import urllib.error
 import urllib.request
 
 GATEWAY = "https://ai-gateway.vercel.sh"
@@ -12,13 +14,20 @@ def load_api_key():
     """環境変数にあればそれを、なければ macOS の Keychain から読む。"""
     key = os.environ.get("AI_GATEWAY_API_KEY")
     if not key:
-        key = subprocess.run(
-            ["/usr/bin/security", "find-generic-password",
-             "-s", "Vercel AI Gateway", "-a", "vercel-ai-gateway", "-w"],
-            capture_output=True, text=True,
-        ).stdout.strip()
+        try:
+            key = subprocess.run(
+                ["/usr/bin/security", "find-generic-password",
+                 "-s", "Vercel AI Gateway", "-a", "vercel-ai-gateway", "-w"],
+                capture_output=True, text=True,
+            ).stdout.strip()
+        except FileNotFoundError:
+            key = ""  # macOS 以外。Keychain が無いので環境変数で渡してもらう
     if not key:
-        raise SystemExit("API キーが見つかりません。npx vercel ai-gateway setup を再実行してください。")
+        raise SystemExit(
+            "API キーが見つかりません。\n"
+            "  macOS      : npx vercel ai-gateway setup\n"
+            "  それ以外の OS: export AI_GATEWAY_API_KEY=..."
+        )
     return key
 
 
@@ -33,12 +42,19 @@ def _post(path, body, extra_headers):
                  "Content-Type": "application/json", **extra_headers},
         method="POST",
     )
-    with urllib.request.urlopen(req) as res:
-        return json.load(res)
+    for attempt in range(4):
+        try:
+            with urllib.request.urlopen(req) as res:
+                return json.load(res)
+        except urllib.error.HTTPError as e:
+            if e.code < 500 or attempt == 3:
+                raise
+            time.sleep(2 ** attempt)  # 5xx は 1, 2, 4 秒待って再試行
 
 
 def evaluate(state, questions, model="typesafe-ai/jev"):
-    """Jev に state と questions を投げ、{"answers": ..., "usage": ...} を返す。"""
+    """Jev に state と questions を投げ、レスポンス全体をそのまま返す。
+    キーは answers / rounding / usage / warnings / providerMetadata。"""
     return _post(
         "/v4/ai/evaluation-model",
         {"state": state, "questions": questions},
@@ -47,6 +63,18 @@ def evaluate(state, questions, model="typesafe-ai/jev"):
          "ai-gateway-protocol-version": "0.0.1",
          "ai-gateway-auth-method": "api-key"},
     )
+
+
+def confidences(result):
+    """evaluate の返り値から confidence を {質問名: 0〜1} で取り出す。
+
+    confidence は answers の中ではなく providerMetadata に入っている。
+    付くのは choice と score だけで、boolean の質問はキーが入らない
+    (質問が boolean だけなら空の辞書が返る)。
+    """
+    return (result.get("providerMetadata", {})
+            .get("typesafe", {})
+            .get("confidence", {}))
 
 
 def chat(prompt, model="anthropic/claude-haiku-4-5"):

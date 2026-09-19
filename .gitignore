@@ -1,2 +1,6 @@
 __pycache__/
 .env
+
+# 手元の作業メモ。公開しない(本名や「スライドには載せない」メモが入っている)
+slides/outline.md
+slides/slides.md

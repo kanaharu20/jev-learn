@@ -16,13 +16,20 @@ def load_api_key():
     """環境変数にあればそれを、なければ macOS の Keychain から読む。"""
     key = os.environ.get("AI_GATEWAY_API_KEY")
     if not key:
-        key = subprocess.run(
-            ["/usr/bin/security", "find-generic-password",
-             "-s", "Vercel AI Gateway", "-a", "vercel-ai-gateway", "-w"],
-            capture_output=True, text=True,
-        ).stdout.strip()
+        try:
+            key = subprocess.run(
+                ["/usr/bin/security", "find-generic-password",
+                 "-s", "Vercel AI Gateway", "-a", "vercel-ai-gateway", "-w"],
+                capture_output=True, text=True,
+            ).stdout.strip()
+        except FileNotFoundError:
+            key = ""  # macOS 以外。Keychain が無いので環境変数で渡してもらう
     if not key:
-        raise SystemExit("API キーが見つかりません。npx vercel ai-gateway setup を再実行してください。")
+        raise SystemExit(
+            "API キーが見つかりません。\n"
+            "  macOS      : npx vercel ai-gateway setup\n"
+            "  それ以外の OS: export AI_GATEWAY_API_KEY=..."
+        )
     return key
 
 
@@ -57,3 +64,7 @@ result = evaluate(
 
 print(json.dumps(result["answers"], indent=2, ensure_ascii=False))
 print("usage:", result.get("usage"))
+
+# answers 以外にもキーがある。Jev 自身の確信度 (confidence) は
+# providerMetadata の中(boolean には付かない)。02 で取り出す。
+print("レスポンスのキー:", list(result))
